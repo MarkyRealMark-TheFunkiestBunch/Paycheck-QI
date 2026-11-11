@@ -1,0 +1,139 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#10283b"><title>Paycheck QI</title><style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#172c3b;background:#f4f7f8}*{box-sizing:border-box}body{margin:0}header{background:#10283b;color:white;padding:20px 18px 16px}header strong{letter-spacing:.07em}header small{display:block;color:#b8d2d9;margin-top:5px}main{max-width:1160px;margin:auto;padding:18px 15px 100px}.card{background:white;border-radius:18px;padding:20px;margin-bottom:14px;box-shadow:0 3px 18px #10283b0c}h1{font-size:27px;line-height:1.2;margin:0 0 12px}h2{font-size:19px;margin:0 0 15px}p{line-height:1.55;color:#536675}label{display:block;font-size:13px;font-weight:650;margin:13px 0 5px}input,select,button{font:inherit}input,select{width:100%;padding:12px;border:1px solid #cbd7dc;border-radius:10px;background:white;min-height:46px}button{border:0;border-radius:12px;padding:12px 15px;min-height:44px;background:#087f88;color:white;font-weight:700;cursor:pointer}.secondary{background:#eaf2f4;color:#123a4b}.danger{color:#9b3333}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:125px}.muted{font-size:13px;color:#647985}.big{font-size:34px;font-weight:750;letter-spacing:-.04em}.stat{padding:14px;background:#edf7f7;border-radius:14px}.stat span{display:block;font-size:12px;color:#476575}.stat strong{font-size:23px}.paycheck-grid{display:grid;grid-template-columns:1fr;gap:14px}.paycheck-grid .shift{border:1px solid #e3eaed;border-radius:14px;padding:16px;background:#fff}@media(min-width:850px){.paycheck-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}.shift{border-top:1px solid #e3eaed;padding:15px 0}.shift:first-child{border-top:0}.shift b{display:block;margin-bottom:5px}nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #e3eaed;display:flex;justify-content:center;padding:8px 5px max(8px,env(safe-area-inset-bottom));z-index:5}nav button{background:white;color:#476575;border-radius:8px;min-width:0;flex:1;max-width:150px;font-size:13px;padding:10px 4px}nav button.active{color:#087f88;background:#eaf6f6}section{display:none}section.active{display:block}.notice{padding:12px;border-radius:12px;background:#fff5dd;font-size:13px;line-height:1.5;color:#6a5427}.ok{background:#eaf6f1;color:#27654a}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:400px){.grid{grid-template-columns:1fr}}.footer{font-size:12px;text-align:center;color:#74858f;margin-top:25px}</style></head><body>
+<header><strong>PAYCHECK QI</strong><small>Version 1.2 · GitHub ready</small><small>Know your hours. Understand your pay.</small></header>
+<main>
+<section id="home" class="active"><div class="card"><h1>Your work deserves an accurate paycheck.</h1><p>Paycheck QI helps healthcare professionals understand their compensation, review their shifts, and spot possible payroll discrepancies.</p><button onclick="tab('settings')">Get started →</button></div><div class="card"><h2>Your paycheck at a glance</h2><div class="big" id="homeGross">$0.00</div><p>Estimated gross earnings for your selected pay period</p><div class="grid"><div class="stat"><span>Hours</span><strong id="homeHours">0</strong></div><div class="stat"><span>Shifts</span><strong id="homeCount">0</strong></div></div><p id="homeDiff"></p><button class="secondary" onclick="tab('pay')">View breakdown</button></div></section>
+<section id="settings"><div class="card"><h2>1. Your pay settings</h2><div class="grid"><div><label>Base hourly rate ($)</label><input id="base" type="number" min="0" step=".01"></div><div><label>Incentive extra per hour ($)</label><input id="incentive" type="number" min="0" step=".01"></div><div><label>Enhanced incentive extra per hour ($)</label><input id="enhanced" type="number" min="0" step=".01"></div><div><label>Weekday night differential ($)</label><input id="night" type="number" min="0" step=".01"></div><div><label>Friday–Sunday night differential ($)</label><input id="weekendNight" type="number" min="0" step=".01"></div><div><label>Other weekend differential ($, if applicable)</label><input id="weekend" type="number" min="0" step=".01"></div><div><label>Observation extra per hour ($)</label><input id="obs" type="number" min="0" step=".01" value="10"></div><div><label>Actual paycheck gross ($)</label><input id="actual" type="number" min="0" step=".01"></div><div><label>Payroll cycle anchor (first day of a known pay period)</label><input id="anchor" type="date"></div><div><label>Payday for the anchor period (optional)</label><input id="anchorPayday" type="date"></div><div><label>Pay period length (days)</label><select id="cycle"><option value="14">14 days (biweekly)</option><option value="7">7 days (weekly)</option><option value="15">15 days (approximate; use actual payroll dates)</option><option value="28">28 days</option></select></div><div><label>Pay period start</label><input id="from" type="date"></div><div><label>Pay period end</label><input id="to" type="date"></div></div></div><div class="card"><h2>2. Connect Google Calendar</h2>
+<p class="muted">Connect Google, choose your calendar, and import shifts.</p>
+<p class="muted">Google connection requires a configured HTTPS website. It does not work from a downloaded HTML file.</p>
+<label>Google OAuth Web Client ID</label><input id="googleClientId" placeholder="123456789-abc.apps.googleusercontent.com" autocomplete="off">
+<details><summary>Google setup instructions</summary><p>Enable Google Calendar API in Google Cloud. Create a Web OAuth client and register this site’s HTTPS origin. Use read-only Calendar access. Never enter a client secret.</p></details>
+<div class="row"><button id="googleConnect" onclick="connectGoogle()">Connect Google Calendar</button><button class="secondary" onclick="disconnectGoogle()">Disconnect</button></div>
+<label>Choose calendar</label><select id="googleCalendar"><option value="">Connect Google first</option></select>
+<div class="row"><button onclick="importGoogleEvents()">Import shifts from Google</button></div>
+<p class="muted" id="googleStatus" role="status">Not connected.</p>
+<details><summary>Alternative: import a calendar file</summary><label>Import .ics file</label><input id="ics" type="file" accept=".ics,text/calendar"><p id="importStatus" class="muted">No file imported.</p></details>
+</div><div class="card"><h2>Your data</h2><div class="row"><button class="secondary" onclick="exportData()">Back up data</button><button class="secondary" onclick="document.getElementById('restore').click()">Restore backup</button><input type="file" id="restore" accept=".json" hidden></div><p class="muted">Saved in this browser, not in a shared account. Clearing browser storage can erase it; keep backups.</p></div></section>
+<section id="shifts"><div class="card"><h2>My shifts</h2><button onclick="document.getElementById('addForm').hidden=!document.getElementById('addForm').hidden">+ Add a shift</button><div id="addForm" hidden><div class="grid"><div><label>Date</label><input id="newDate" type="date"></div><div><label>Location</label><input id="newLocation" placeholder="Hospital / unit"></div><div><label>Start time</label><input id="newStart" type="time"></div><div><label>Hours</label><input id="newHours" type="number" step=".25" min="0"></div><div><label>Observation handoff</label><select id="newHandoff"><option value="standard">Standard handoff (11 PM)</option><option value="early">Early handoff (7 PM)</option><option value="custom">Custom handoff</option><option value="none">No observation coverage</option></select></div><div><label>Custom observation hours</label><input id="newObsHours" type="number" min="0" step=".25" placeholder="Only for custom"></div><div><label>Incentive type</label><select id="newIncentive"><option value="No">Regular shift — no incentive</option><option value="Yes">Regular incentive (+$75/hour)</option><option value="Enhanced">Enhanced incentive (+$100/hour)</option></select></div></div><p><button onclick="addShift()">Save shift</button></p></div><div id="shiftList"></div></div></section>
+<section id="pay"><div class="card"><h2>Paycheck history & upcoming paychecks</h2><div id="paycheckCards" class="paycheck-grid"></div></div><div class="card"><h2>Paycheck breakdown</h2><div class="big" id="payGross">$0.00</div><p>Estimated gross pay</p><div id="breakdown"></div><p id="difference"></p><button class="secondary" onclick="exportCSV()">Export shifts to CSV</button></div><details class="card"><summary>Calculation notes</summary><p class="muted">Night differential: 7 PM–7 AM. Friday–Sunday night shifts: $10/hour; other nights: $5/hour. Review observation hours and employer payroll rules.</p></details></section>
+<div class="footer">Paycheck QI • Local prototype • Not an official payroll statement</div></main>
+<nav><button data-tab="home" class="active" onclick="tab('home')">⌂ Home</button><button data-tab="settings" onclick="tab('settings')">⚙ Setup</button><button data-tab="shifts" onclick="tab('shifts')">▦ Shifts</button><button data-tab="pay" onclick="tab('pay')">$ My Pay</button></nav>
+<script src="https://accounts.google.com/gsi/client" async defer></script><script>
+const keys=['base','incentive','enhanced','night','weekendNight','weekend','obs','actual','from','to','anchor','anchorPayday' ,'cycle','googleClientId'];let state={settings:{obs:'10',base:'65',incentive:'75',enhanced:'100',night:'5',weekendNight:'10',cycle:'14',anchor:'2026-11-01',anchorPayday:'2026-11-20'},shifts:[]};try{const saved=JSON.parse(localStorage.getItem('pqi-v1'));if(saved&&Array.isArray(saved.shifts))state=saved;state.settings={base:'65',incentive:'75',enhanced:'100',obs:'10',night:'5',weekendNight:'10',cycle:'14',anchor:'2026-11-01',anchorPayday:'2026-11-20',...state.settings};if(!state.settings.anchor)state.settings.anchor='2026-11-01';if(!state.settings.anchorPayday)state.settings.anchorPayday='2026-11-20'}catch(e){}
+const $=id=>document.getElementById(id),num=x=>Number(x)||0,money=x=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(x);
+function save(){localStorage.setItem('pqi-v1',JSON.stringify(state));render()}
+function tab(t){document.querySelectorAll('main section').forEach(x=>x.classList.toggle('active',x.id===t));document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===t));if(t==='shifts')renderShifts();scrollTo(0,0)}
+keys.forEach(k=>{ $(k).value=state.settings[k]??'';$(k).addEventListener('input',()=>{state.settings[k]=$(k).value;save()})});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function inPeriod(s){let a=state.settings.from,b=state.settings.to;return(!a||s.date>=a)&&(!b||s.date<=b)}
+function calc(s){let v=state.settings,h=num(s.hours),n=num(s.nightHours),w=num(s.weekendHours),o=s.obsCovered==='Yes'?num(s.obsHours):0;return{base:h*num(v.base),incentive:s.incentive==='Enhanced'?h*num(v.enhanced):s.incentive==='Yes'?h*num(v.incentive):0,night:n*num([0,5,6].includes(new Date(s.date+'T12:00:00').getDay())?v.weekendNight:v.night),weekend:w*num(v.weekend),obs:o*num(v.obs)}}
+function dateUTC(d){return Date.parse(d+'T00:00:00Z')}
+function isoUTC(t){return new Date(t).toISOString().slice(0,10)}
+function paycheckPeriods(){
+ const a=state.settings.anchor,days=Math.max(1,Number(state.settings.cycle)||14),span=days*86400000;
+ if(!a||!Number.isFinite(dateUTC(a)))return null;
+ const dates=state.shifts.map(x=>x.date).filter(x=>/^\\d{4}-\\d{2}-\\d{2}$/.test(x));
+ const today=new Date().toISOString().slice(0,10);dates.push(today);
+ const lo=Math.min(...dates.map(dateUTC)),hi=Math.max(...dates.map(dateUTC));
+ const anchor=dateUTC(a),first=Math.floor((lo-anchor)/span)-1,last=Math.floor((hi-anchor)/span)+2;
+ const out=[];
+ for(let i=first;i<=last&&out.length<150;i++){
+   const start=isoUTC(anchor+i*span),end=isoUTC(anchor+(i+1)*span-86400000);
+   const shifts=state.shifts.filter(x=>x.date>=start&&x.date<=end);
+   if(!shifts.length&&!(today>=start&&today<=end))continue;
+   const gross=shifts.reduce((v,x)=>v+Object.values(calc(x)).reduce((a,b)=>a+b,0),0);
+   out.push({start,end,shifts,gross,status:end<today?'Past':start>today?'Upcoming':'Current'});
+ }
+ return out.reverse();
+}
+function renderPaycheckCards(){
+ const el=$('paycheckCards'),periods=paycheckPeriods();
+ if(!periods){el.innerHTML='<p>In Setup, enter the first day of a known pay period. Individual paycheck cards will appear here, including future scheduled shifts.</p>';return}
+ const anchorPay=state.settings.anchorPayday,anchor=state.settings.anchor,span=(Number(state.settings.cycle)||14)*86400000;
+ el.innerHTML=periods.map(p=>{
+ const key=p.start+'|'+p.end,actual=state.actuals?.[key],parts={base:0,incentive:0,night:0,weekend:0,obs:0};
+ p.shifts.forEach(x=>{const v=calc(x);Object.keys(parts).forEach(k=>parts[k]+=v[k])});
+ let payday='';
+ if(anchorPay&&Number.isFinite(dateUTC(anchorPay)))payday=isoUTC(dateUTC(anchorPay)+Math.round((dateUTC(p.start)-dateUTC(anchor))/span)*span);
+ const details=Object.entries(parts).map(([k,v])=>`<p>${esc(k[0].toUpperCase()+k.slice(1))}: <b>${money(v)}</b></p>`).join('');
+ const shifts=p.shifts.length?p.shifts.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(x=>`<p>${esc(x.date)} · ${esc(x.location||'Shift')} · ${num(x.hours).toFixed(2)} hours · ${money(Object.values(calc(x)).reduce((a,b)=>a+b,0))}</p>`).join(''):'<p>No shifts imported for this period.</p>';
+ return `<div class="shift"><b>${payday?'Paycheck — '+esc(payday):esc(p.status)+' paycheck'}</b><p class="muted">Pay period: ${esc(p.start)} – ${esc(p.end)} · ${esc(p.status)}</p><p><strong style="font-size:1.35rem">${money(p.gross)}</strong> expected gross · ${p.shifts.length} shifts</p><details><summary style="cursor:pointer;font-weight:600">View paycheck breakdown</summary><div style="padding:8px 0">${details}<hr>${shifts}</div></details><label>Actual gross from paystub ($)</label><input type="number" min="0" step=".01" data-actual="${esc(key)}" value="${esc(actual??'')}" placeholder="Enter actual gross"><p class="muted">${actual!==undefined&&actual!==''?'Actual minus expected: '+money(num(actual)-p.gross):'Not yet compared to a paystub'}</p></div>`
+ }).join('');
+}
+$('paycheckCards').addEventListener('change',e=>{let k=e.target.dataset.actual;if(k){state.actuals??={};state.actuals[k]=e.target.value;save()}});
+function render(){let list=state.shifts.filter(inPeriod),total={base:0,incentive:0,night:0,weekend:0,obs:0},hrs=0;list.forEach(s=>{hrs+=num(s.hours);let c=calc(s);Object.keys(total).forEach(k=>total[k]+=c[k])});let gross=Object.values(total).reduce((a,b)=>a+b,0);$('homeGross').textContent=$('payGross').textContent=money(gross);$('homeHours').textContent=hrs.toFixed(2);$('homeCount').textContent=list.length;$('breakdown').innerHTML=Object.entries(total).map(([k,v])=>`<p><b>${k[0].toUpperCase()+k.slice(1)}</b>: ${money(v)}</p>`).join('');let actual=state.settings.actual;if(actual!==undefined&&actual!==''){$('difference').textContent='Actual minus expected: '+money(num(actual)-gross);$('homeDiff').textContent=$('difference').textContent}else{$('difference').textContent='Enter actual gross pay in Setup to compare.';$('homeDiff').textContent=''}renderShifts();renderPaycheckCards()}
+function update(id,key,value){let s=state.shifts.find(s=>s.id===id);if(s){s[key]=value;if(key==='handoff'){s.obsCovered=value==='none'?'No':'Yes';if(value==='standard')s.obsHours=8;if(value==='early')s.obsHours=12;if(value==='none')s.obsHours=0;}if(key==='obsHours'){s.handoff='custom';s.obsCovered=num(value)>0?'Yes':'No'}save()}}
+function renderShifts(){let el=$('shiftList'),list=state.shifts.filter(inPeriod).sort((a,b)=>a.date.localeCompare(b.date));if(!list.length){el.innerHTML='<p>No shifts in this pay period yet. Import your calendar or add a shift.</p>';return}el.innerHTML=list.map(s=>{let c=calc(s),total=Object.values(c).reduce((a,b)=>a+b,0);return `<div class="shift"><b>${esc(s.date)} · ${esc(s.location)}</b><span class="muted">${esc(s.start)} · ${esc(s.hours)} hours · ${money(total)}</span><div class="grid"><div><label>Incentive type</label><select data-id="${esc(s.id)}" data-key="incentive"><option value="" ${!s.incentive?'selected':''}>Select incentive type</option><option value="No" ${s.incentive==='No'?'selected':''}>Regular shift — no incentive</option><option value="Yes" ${s.incentive==='Yes'?'selected':''}>Regular incentive (+$75/hour)</option><option value="Enhanced" ${s.incentive==='Enhanced'?'selected':''}>Enhanced incentive (+$100/hour)</option></select></div><div><label>Observation handoff</label><select data-id="${esc(s.id)}" data-key="handoff"><option value="standard" ${(!s.handoff||s.handoff==='standard')?'selected':''}>Standard (11 PM)</option><option value="early" ${s.handoff==='early'?'selected':''}>Early (7 PM)</option><option value="custom" ${s.handoff==='custom'?'selected':''}>Custom hours</option><option value="none" ${s.handoff==='none'?'selected':''}>No coverage</option></select></div><div><label>Night hours (7 p.m.–7 a.m.; editable)</label><input type="number" step=".25" min="0" value="${esc(s.nightHours)}" data-id="${esc(s.id)}" data-key="nightHours"></div><div><label>Weekend hours</label><input type="number" step=".25" min="0" value="${esc(s.weekendHours)}" data-id="${esc(s.id)}" data-key="weekendHours"></div><div><label>Observation hours</label><input type="number" step=".25" min="0" value="${esc(s.obsHours)}" data-id="${esc(s.id)}" data-key="obsHours"></div></div><p><button class="secondary danger" data-delete="${esc(s.id)}">Remove</button></p></div>`}).join('')}
+$('shiftList').addEventListener('change',e=>{let d=e.target.dataset;if(d.id&&d.key)update(d.id,d.key,e.target.value)});$('shiftList').addEventListener('click',e=>{let id=e.target.dataset.delete;if(id&&confirm('Remove this shift?')){state.shifts=state.shifts.filter(s=>s.id!==id);save()}});
+function addShift(){let date=$('newDate').value,h=num($('newHours').value);if(!date||h<=0){alert('Enter a date and positive hours.');return}let start=$('newStart').value||'00:00',location=$('newLocation').value||'Unspecified';state.shifts.push({id:crypto.randomUUID(),key:'manual-'+crypto.randomUUID(),date,start,location,hours:h,nightHours:nightHoursFor(start,h),weekendHours:0,obsHours:$('newHandoff').value==='custom'?num($('newObsHours').value):$('newHandoff').value==='early'?12:$('newHandoff').value==='none'?0:8,incentive:$('newIncentive').value,obsCovered:$('newHandoff').value==='none'?'No':'Yes',handoff:$('newHandoff').value});$('addForm').hidden=true;save()}
+
+let googleToken=null,googleTokenClient=null;
+function googleStatus(message){$('googleStatus').textContent=message}
+function disconnectGoogle(){googleToken=null;googleTokenClient=null;$('googleCalendar').innerHTML='<option value="">Connect Google first</option>';googleStatus('Disconnected. Existing imported shifts remain on this device.')}
+async function googleAPI(path){
+ if(!googleToken)throw Error('Connect to Google first.');
+ const r=await fetch('https://www.googleapis.com/calendar/v3/'+path,{headers:{Authorization:'Bearer '+googleToken},cache:'no-store'});
+ if(!r.ok){let body=await r.text();throw Error('Google Calendar API '+r.status+': '+body.slice(0,180))}
+ return r.json()
+}
+function connectGoogle(){
+ const id=$('googleClientId').value.trim();
+ if(!/^.+\.apps\.googleusercontent\.com$/.test(id)){googleStatus('Enter a valid Google OAuth Web Client ID.');return}
+ if(location.protocol!=='https:'&&location.hostname!=='localhost'){googleStatus('Google sign-in requires a registered HTTPS website. This local HTML file cannot connect.');return}
+ if(!window.google?.accounts?.oauth2){googleStatus('Google sign-in library is unavailable. Check your connection and browser.');return}
+ googleTokenClient=google.accounts.oauth2.initTokenClient({
+ client_id:id,scope:'https://www.googleapis.com/auth/calendar.readonly',
+ callback:async response=>{
+ if(response.error){googleStatus('Google sign-in failed: '+response.error);return}
+ googleToken=response.access_token;
+ try{
+  googleStatus('Connected. Loading your calendars…');
+  let items=[],page;
+  do{let q='users/me/calendarList?maxResults=250'+(page?'&pageToken='+encodeURIComponent(page):'');let data=await googleAPI(q);items.push(...(data.items||[]));page=data.nextPageToken}while(page);
+  $('googleCalendar').innerHTML='<option value="">Choose a calendar</option>'+items.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.summary||c.id)+'</option>').join('');
+  googleStatus('Connected. Select the calendar containing your QGenda shifts.');
+ }catch(e){googleStatus(e.message)}
+ }});
+ googleTokenClient.requestAccessToken({prompt:'consent'});
+}
+function googleEventShift(e){
+ if(!e.start?.dateTime||!e.end?.dateTime||e.status==='cancelled')return null;
+ const startDate=new Date(e.start.dateTime),endDate=new Date(e.end.dateTime);
+ const hours=(endDate-startDate)/3600000;
+ if(!Number.isFinite(hours)||hours<=0||hours>24)return null;
+ const tz='America/Chicago';
+ const f=new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+ const parts=Object.fromEntries(f.formatToParts(startDate).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
+ const date=parts.year+'-'+parts.month+'-'+parts.day,start=parts.hour+':'+parts.minute;
+ return {key:'google|'+e.id+'|'+e.start.dateTime,date,start,location:e.summary||e.location||'Calendar shift',hours:Math.round(hours*100)/100,nightHours:nightHoursFor(start,hours),weekendHours:0,obsHours:8,incentive:'No',obsCovered:'Yes',handoff:'standard'};
+}
+async function importGoogleEvents(){
+ const calendar=$('googleCalendar').value;
+ if(!calendar){googleStatus('Choose a Google calendar first.');return}
+ try{
+ googleStatus('Importing events from Google Calendar…');
+ const start=new Date(),end=new Date();start.setFullYear(start.getFullYear()-1);end.setFullYear(end.getFullYear()+1);
+ let page,events=[],count=0;
+ do{
+ const q='calendars/'+encodeURIComponent(calendar)+'/events?singleEvents=true&maxResults=2500&timeMin='+encodeURIComponent(start.toISOString())+'&timeMax='+encodeURIComponent(end.toISOString())+(page?'&pageToken='+encodeURIComponent(page):'');
+ const data=await googleAPI(q);events.push(...(data.items||[]));page=data.nextPageToken;
+ }while(page&&events.length<20000);
+ const shifts=events.map(googleEventShift).filter(Boolean);
+ // Use existing merge function, which retains user-edited classifications on matching events.
+ const previous=new Map(state.shifts.map(x=>[x.key,x]));
+ for(const x of shifts){let old=previous.get(x.key);if(old){Object.assign(old,{date:x.date,start:x.start,location:x.location,hours:x.hours})}else{state.shifts.push({...x,id:crypto.randomUUID()});count++}}
+ save();googleStatus('Imported '+shifts.length+' timed events ('+count+' new). Review entries: not every calendar event is necessarily a paid shift.');
+ }catch(e){googleStatus('Import failed: '+e.message)}
+}
+function unfold(t){return t.replace(/\r?\n[ \t]/g,'').replace(/\r/g,'')}
+function nightHoursFor(start,hours){let parts=(start||'').split(':').map(Number);if(parts.length<2||!Number.isFinite(parts[0]))return 0;let minute=parts[0]*60+parts[1],total=0;for(let elapsed=0;elapsed<hours*60;elapsed+=15){let clock=(minute+elapsed)%1440;if(clock>=1140||clock<420)total+=Math.min(15,hours*60-elapsed)/60}return Math.round(total*100)/100}
+function parseICS(t){let events=unfold(t).split('BEGIN:VEVENT').slice(1),out=[];for(let e of events){e=e.split('END:VEVENT')[0];let get=(name)=>{let line=e.split('\n').find(l=>l.split(':')[0].split(';')[0]===name);return line?line.slice(line.indexOf(':')+1).trim():''};let a=get('DTSTART'),b=get('DTEND'),uid=get('UID'),location=get('LOCATION')||get('SUMMARY')||'QGenda shift';if(!/^\d{8}/.test(a)||!/^\d{8}/.test(b))continue;let date=a.slice(0,4)+'-'+a.slice(4,6)+'-'+a.slice(6,8),start=a.length>8?a.slice(9,11)+':'+a.slice(11,13):'00:00';let dt=v=>{let y=+v.slice(0,4),m=+v.slice(4,6)-1,d=+v.slice(6,8),h=+v.slice(9,11)||0,mi=+v.slice(11,13)||0;return Date.UTC(y,m,d,h,mi)};let hours=Math.round((dt(b)-dt(a))/3600000*100)/100;if(hours<=0||hours>36)continue;let key=uid?uid+'|'+a:date+'|'+start+'|'+location;out.push({key,date,start,location:location.replace(/\\,/g,','),hours,nightHours:nightHoursFor(start,hours),weekendHours:0,obsHours:8,incentive:'No',obsCovered:'Yes',handoff:'standard'})}return out}
+function importICS(t){let found=parseICS(t);if(!found.length){$('importStatus').textContent='No usable timed shifts found. Check that the file is a QGenda .ics calendar.';return}let old=new Map(state.shifts.map(s=>[s.key,s]));let keep=state.shifts.filter(s=>s.key?.startsWith('manual-'));state.shifts=[...keep,...found.map(s=>{let prior=old.get(s.key);return prior?{...s,...prior,date:s.date,start:s.start,location:s.location,hours:s.hours}: {...s,id:crypto.randomUUID()}})];save();$('importStatus').textContent=`Imported ${found.length} calendar events. Existing manual selections preserved for matching events.`;tab('shifts')}
+$('ics').addEventListener('change',async e=>{let f=e.target.files[0];if(f)importICS(await f.text())});
+async function fetchCalendar(){let u=state.settings.url;if(!/^https:\/\//i.test(u||'')){alert('Paste an HTTPS QGenda calendar URL first.');return} $('importStatus').textContent='Trying calendar URL…';try{let r=await fetch(u,{mode:'cors',redirect:'follow',cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);let t=await r.text();if(!t.includes('BEGIN:VCALENDAR'))throw Error('Response was not an ICS calendar');importICS(t)}catch(e){$('importStatus').textContent='Google Calendar direct sync was blocked or unavailable. This standalone app cannot bypass Google’s CORS restrictions. Export an .ics file and import it below, or use a trusted server-based connector. ('+e.message+')'}}
+function download(content,name,type){let a=document.createElement('a'),url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function exportData(){download(JSON.stringify(state,null,2),'paycheck-qi-backup.json','application/json')}
+$('restore').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;try{let data=JSON.parse(await f.text());if(!Array.isArray(data.shifts)||!data.settings)throw Error('Invalid backup');if(!confirm('Replace current saved data with this backup?'))return;state=data;keys.forEach(k=>$(k).value=state.settings[k]??'');save()}catch(e){alert('Could not restore backup: '+e.message)}});
+function exportCSV(){let rows=[['Date','Location','Start','Hours','Incentive','Observation covered','Night hours','Weekend hours','Observation hours','Estimated gross']];state.shifts.filter(inPeriod).forEach(s=>rows.push([s.date,s.location,s.start,s.hours,s.incentive,s.obsCovered,s.nightHours,s.weekendHours,s.obsHours,Object.values(calc(s)).reduce((a,b)=>a+b,0).toFixed(2)]));let csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');download(csv,'paycheck-qi-shifts.csv','text/csv')}
+render();
+</script></body></html>
